@@ -116,11 +116,12 @@ def train(data, params):
                 pred = model(batch_x)
                 loss = criterion[modeli](pred, batch_y)
                 loss.backward()
-                # if not isinstance(models[0], m.BLSTM):
-                nn.utils.clip_grad_norm(parameters[modeli], max_norm=params['NORM_LIMIT'])
+                if params['NORM_LIMIT'] > 0:
+                    nn.utils.clip_grad_norm(parameters[modeli], max_norm=params['NORM_LIMIT'])
                 optimizer[modeli].step()
 
-        if isinstance(models[0], m.BLSTM) or isinstance(models[0], m.CNN2D):
+        if any([model.name in ['BLSTM', 'AttBLSTM'] for model in models]):
+            print('batch_test')
             dev_acc = batch_test(data, models, params, mode='dev')
             test_acc = batch_test(data, models, params)
         else:
