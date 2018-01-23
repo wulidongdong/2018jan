@@ -18,13 +18,13 @@ dataset = [
     # 'yelpp'
 ]
 we = [
-    'w2v',
+    # 'w2v',
     # 'randPARAMn',
     # 'scv',
-    'w2v_scv',
+    # 'w2v_scv',
     # 'w2v_randPARAMn',
     # 'chi2scv',
-    'w2v_chi2scv',
+    # 'w2v_chi2scv',
     # 'rfscv',
     # 'w2v_rfscv',
     # 'iqfscv',
@@ -62,7 +62,7 @@ we = [
     # 'scvPARAM5000_kcvPARAM1_w2vkcv',
     # 'scvPARAM5000_kcvPARAM1',
     # 'senticv',
-    # 'w2v_senticv',
+    'w2v_senticv',
     # 'senticvPARAM5000',
     # 'w2v_senticvPARAM5000',
     # 'w2v_senticv_scv',
@@ -106,7 +106,7 @@ batch_size = [
     ]
 gpu = {'MR': -0, 'TREC': -0, 'SST1': -0, 'SST2': 0, 'AG': 0}
 result_path = {d: 'result/result_{}_clean_{}.csv'.format(d, host) for d in dataset}
-# we = [x.replace('_', '-') for x in we]
+we = [x.replace('_', '-') for x in we]
 
 for d in dataset:
     for w in we:
@@ -116,7 +116,7 @@ for d in dataset:
                     for nl in norm_limit:
                         for bs in batch_size:
                             print(d, w, f, fn, dp, nl, bs)
-                            os.system('python run.py --type CNN --dataset {} --early_stopping --we {} --filters {} --filter_num {} --dropout_prob {} --norm_limit {} --batch_size {} --gpu {} --result_path {}'
+                            os.system('python run.py --type CNN3 --dataset {} --early_stopping --we {} --filters {} --filter_num {} --dropout_prob {} --norm_limit {} --batch_size {} --gpu {} --result_path {}'
                                       .format(d, w, ' '.join(f), ' '.join(fn), dp, nl, bs, gpu[d], result_path[d]))
     # data = utils.get_dataset(d)
     # cv.load_w2v(data)
