@@ -11,6 +11,7 @@ class CNN(nn.Module):
     def __init__(self, **kwargs):
         super(CNN, self).__init__()
 
+        self.name = 'CNN'
         self.MODEL = kwargs['MODEL']
         self.BATCH_SIZE = kwargs['BATCH_SIZE']
         self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
@@ -71,6 +72,7 @@ class CNN2D(nn.Module):
     def __init__(self, **kwargs):
         super(CNN2D, self).__init__()
 
+        self.name = 'CNN2D'
         self.MODEL = kwargs['MODEL']
         self.BATCH_SIZE = kwargs['BATCH_SIZE']
         self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
@@ -129,6 +131,7 @@ class CNN3(nn.Module):
     def __init__(self, **kwargs):
         super(CNN3, self).__init__()
 
+        self.name = 'CNN3'
         self.MODEL = kwargs['MODEL']
         self.BATCH_SIZE = kwargs['BATCH_SIZE']
         self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
@@ -168,7 +171,9 @@ class CNN3(nn.Module):
             conv = nn.Conv1d(self.IN_CHANNEL, self.FILTER_NUM[i], self.WORD_DIM[1] * self.FILTERS[i], stride=self.WORD_DIM[1])
             setattr(self, 'conv_cv_{}'.format(i), conv)
 
-        self.fc = nn.Linear(sum(self.FILTER_NUM) * 2, self.CLASS_SIZE)
+        self.hidden = nn.Linear(sum(self.FILTER_NUM), self.CLASS_SIZE)
+        self.hidden_cv = nn.Linear(sum(self.FILTER_NUM), self.CLASS_SIZE)
+        self.fc = nn.Linear(self.CLASS_SIZE * 2, self.CLASS_SIZE)
 
     def get_conv(self, i):
         return getattr(self, 'conv_{}'.format(i))
@@ -197,6 +202,10 @@ class CNN3(nn.Module):
         x = F.dropout(x, p=self.DROPOUT_PROB, training=self.training)
         xcv = F.dropout(xcv, p=self.DROPOUT_PROB, training=self.training)
 
+        x = F.tanh(self.hidden(x))
+        xcv = F.tanh(self.hidden_cv(xcv))
+        # x = F.dropout(x, p=self.DROPOUT_PROB, training=self.training)
+        # xcv = F.dropout(xcv, p=self.DROPOUT_PROB, training=self.training)
         x = torch.cat((x, xcv), 1)
         x = self.fc(x)
         # x = F.softmax(x, dim=1)
@@ -207,6 +216,7 @@ class BLSTM(nn.Module):
     def __init__(self, **kwargs):
         super(BLSTM, self).__init__()
 
+        self.name = 'BLSTM'
         self.BATCH_SIZE = kwargs['BATCH_SIZE']
         self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
         self.VOCAB_SIZE = kwargs['VOCAB_SIZE']
@@ -264,6 +274,7 @@ class CNNCCA(nn.Module):
     def __init__(self, **kwargs):
         super(CNNCCA, self).__init__()
 
+        self.name = 'CNNCCA'
         self.BATCH_SIZE = kwargs['BATCH_SIZE']
         self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
         self.VOCAB_SIZE = kwargs['VOCAB_SIZE']
@@ -331,5 +342,75 @@ class CNNCCA(nn.Module):
             F.max_pool1d(F.relu(self.get_conv(i)(x)), self.MAX_SENT_LEN - self.FILTERS[i] + 1).view(-1, self.FILTER_NUM[i]) for i in range(len(self.FILTERS))]
         x = torch.cat(conv_results, 1)
         x = F.dropout(x, p=self.DROPOUT_PROB, training=self.training)
+        x = self.fc(x)
+        return x
+
+
+class AttBLSTM(nn.Module):
+    def __init__(self, **kwargs):
+        super(AttBLSTM, self).__init__()
+
+        self.name = 'AttBLSTM'
+        self.BATCH_SIZE = kwargs['BATCH_SIZE']
+        self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
+        self.VOCAB_SIZE = kwargs['VOCAB_SIZE']
+        self.CLASS_SIZE = kwargs['CLASS_SIZE']
+        self.WORD_DIM = kwargs['WORD_DIM']
+        self.WV_MATRIX = kwargs['WV_MATRIX']
+        self.HIDDEN_SIZE = self.WORD_DIM
+        self.ATTN_SIZE = self.HIDDEN_SIZE
+        self.NUM_LAYERS = 1
+        self.BIDIRECTIONAL = True
+        self.DROPOUT_PROB = [0.3, 0.3, 0.5]
+        self.embedding = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+        self.bilstm = nn.LSTM(input_size=self.WORD_DIM, batch_first=True, hidden_size=self.HIDDEN_SIZE, num_layers=self.NUM_LAYERS, bidirectional=self.BIDIRECTIONAL)
+        self.atten = nn.Linear(self.ATTN_SIZE, 1)
+        self.fc = nn.Linear(self.ATTN_SIZE, self.CLASS_SIZE)
+
+    def forward(self, inp):
+        x = self.embedding(inp).view(-1, self.MAX_SENT_LEN, self.WORD_DIM)
+        x = F.dropout(x, p=self.DROPOUT_PROB[0], training=self.training)
+        x, hidden = self.bilstm(x, None)
+        x = x[:, :, :self.HIDDEN_SIZE] + x[:, :, self.HIDDEN_SIZE:]
+        # x = F.tanh(x)
+        x = F.dropout(x, p=self.DROPOUT_PROB[1], training=self.training)
+        attn_weights = F.tanh(F.softmax(self.atten(x), dim=2)).view(-1, 1, self.MAX_SENT_LEN)
+        x = torch.bmm(attn_weights, x).view(-1, self.ATTN_SIZE)
+        x = F.tanh(x)
+        x = F.dropout(x, p=self.DROPOUT_PROB[2], training=self.training)
+        x = self.fc(x)
+        return x
+
+
+class RCNN(nn.Module):
+    def __init__(self, **kwargs):
+        super(RCNN, self).__init__()
+
+        self.name = 'RCNN'
+        self.BATCH_SIZE = kwargs['BATCH_SIZE']
+        self.MAX_SENT_LEN = kwargs['MAX_SENT_LEN']
+        self.VOCAB_SIZE = kwargs['VOCAB_SIZE']
+        self.CLASS_SIZE = kwargs['CLASS_SIZE']
+        self.WORD_DIM = kwargs['WORD_DIM']
+        self.WV_MATRIX = kwargs['WV_MATRIX']
+        self.HIDDEN_SIZE = 50
+        self.HIDDEN_OUTPUT = 100
+        self.NUM_LAYERS = 1
+        self.BIDIRECTIONAL = True
+        self.DROPOUT_PROB = [0.3, 0.3, 0.5]
+        self.embedding = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+        self.bilstm = nn.LSTM(input_size=self.WORD_DIM, batch_first=True, hidden_size=self.HIDDEN_SIZE, num_layers=self.NUM_LAYERS, bidirectional=self.BIDIRECTIONAL)
+        self.hidden = nn.Linear((self.HIDDEN_SIZE * 2 + self.WORD_DIM), self.HIDDEN_OUTPUT)
+        self.fc = nn.Linear(self.HIDDEN_OUTPUT, self.CLASS_SIZE)
+
+    def forward(self, inp):
+        x = self.embedding(inp).view(-1, self.MAX_SENT_LEN, self.WORD_DIM)
+        x = F.dropout(x, p=self.DROPOUT_PROB[0], training=self.training)
+        context, hidden = self.bilstm(x, None)
+        x = torch.cat([context[:, :, :self.HIDDEN_SIZE], x, context[:, :, self.HIDDEN_SIZE:]], 2)
+        x = F.dropout(x, p=self.DROPOUT_PROB[1], training=self.training)
+        x = F.tanh(self.hidden(x))
+        x = torch.max(x, 1)[0]
+        x = F.dropout(x, p=self.DROPOUT_PROB[2], training=self.training)
         x = self.fc(x)
         return x
