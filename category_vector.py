@@ -342,7 +342,9 @@ def load_kscv(data):
     kcv = np.concatenate([kcv[:, :3], kcv[:, 3:].max(1).reshape(-1, 1)], 1)
     scv = load_scv(data, normal=False)[:-2]
     assert(len(kcv[0]) == len(scv[0]))
-    kcv = kcv * 50
+    alpha = 150
+    print('kcv alpha', alpha)
+    kcv = kcv * alpha
     denominator = kcv.sum(1) + scv.sum(1)
     kscv = (kcv + scv) / denominator[:, None]
     kscv[np.isnan(kscv)] = 0
