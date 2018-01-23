@@ -3,6 +3,7 @@ from sklearn.utils import shuffle
 import pickle
 import pandas as pd
 import re
+from nltk.stem import WordNetLemmatizer
 
 
 def clean_str(string):
@@ -24,10 +25,12 @@ def clean_str(string):
 
 def get_dataset(name):
     data = eval('read_{}'.format(name))()
-    # data['train_x'] = [[clean_str(x) for x in y] for y in data['train_x']]
-    # data['dev_x'] = [[clean_str(x) for x in y] for y in data['dev_x']]
-    # data['test_x'] = [[clean_str(x) for x in y] for y in data['test_x']]
-    # print('data clean')
+    if data['lemmatize']:
+        lemmatizer = WordNetLemmatizer()
+        data['train_x'] = [[lemmatizer.lemmatize(x) for x in y] for y in data['train_x']]
+        data['dev_x'] = [[lemmatizer.lemmatize(x) for x in y] for y in data['dev_x']]
+        data['test_x'] = [[lemmatizer.lemmatize(x) for x in y] for y in data['test_x']]
+        print('lemmatizer')
     data['vocab'] = sorted(list(set([w for sent in data['train_x'] + data['dev_x'] + data['test_x'] for w in sent])))
     data['classes'] = sorted(list(set(data['train_y'])))
     data['word_to_idx'] = {w: i for i, w in enumerate(data['vocab'])}
@@ -55,6 +58,7 @@ def read_yelpf():
 
     read('train')
     read('test')
+    data['lemmatize'] = True
     return data
 
 
@@ -77,6 +81,7 @@ def read_yelpp():
 
     read('train')
     read('test')
+    data['lemmatize'] = True
     return data
 
 
@@ -101,6 +106,7 @@ def read_SST1():
     read('train')
     read('test')
     read('dev')
+    data['lemmatize'] = True
     return data
 
 
@@ -125,6 +131,7 @@ def read_SST2():
     read('train')
     read('test')
     read('dev')
+    data['lemmatize'] = True
     return data
 
 
@@ -153,6 +160,7 @@ def read_AG():
     data['labels'] = ['world', 'business', 'sport', 'science', 'technology']
     read('train')
     read('test')
+    data['lemmatize'] = True
     return data
 
 
@@ -180,7 +188,7 @@ def read_TREC():
 
     read('train')
     read('test')
-
+    data['lemmatize'] = True
     return data
 
 
@@ -211,7 +219,7 @@ def read_MR():
     data['test_x'], data['test_y'] = x[test_idx:], y[test_idx:]
     data['x'] = x
     data['y'] = y
-
+    data['lemmatize'] = True
     return data
 
 
