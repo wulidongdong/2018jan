@@ -1,18 +1,16 @@
 import os
-import utils
-import category_vector as cv
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--host', default='zcm', help='yl, b8, zcm')
+parser.add_argument('--host', default='xjy', help='yl, b8, zcm')
 options = parser.parse_args()
 
 host = options.host
 dataset = [
-    # 'MR',
+    'MR',
     # 'TREC',
     'SST1',
-    # 'SST2',
+    'SST2',
     # 'AG',
     # 'yelpf',
     # 'yelpp'
@@ -71,7 +69,7 @@ we = [
 filters = [
     ['4', '5', '6'],
     ['3', '4', '5'],
-    ['3', '4', '5', '6'],
+    ['5', '6', '7'],
     ['2', '3', '4']
     ]
 filter_num = [
@@ -81,17 +79,17 @@ filter_num = [
     ]
 dropout_prob = [
     0.5,
-    0.6,
-    0.4,
-    0.3,
-    0.2,
+    # 0.6,
+    # 0.4,
+    # 0.3,
+    # 0.2,
     ]
 norm_limit = [
-    1,
-    2,
+    # 1,
+    # 2,
     3,
-    4,
-    5,
+    # 4,
+    # 5,
     # 0.00001
     ]
 batch_size = [
