@@ -190,7 +190,8 @@ class CNN3(nn.Module):
 
             x = torch.cat((x, x2), 1)
             xcv = torch.cat((xcv, x2cv), 1)
-
+        # x = F.dropout(x, p=0.3, training=self.training)
+        # xcv = F.dropout(xcv, p=0.3, training=self.training)
         conv_results = [
             F.max_pool1d(F.relu(self.get_conv(i)(x)), self.MAX_SENT_LEN - self.FILTERS[i] + 1).view(-1, self.FILTER_NUM[i]) for i in range(len(self.FILTERS))]
 
