@@ -499,7 +499,7 @@ def load_yelpfscv(data, max_feature=None):
 
 
 def load_AGscv(data, max_feature=None):
-    ag = AG(max_feature)
+    ag = AG()
     agscv = []
     new_value_list = [2] * ag.len
     for i in range(len(data['vocab'])):
@@ -508,11 +508,12 @@ def load_AGscv(data, max_feature=None):
             agscv.append(ag.scv[word])
         else:
             agscv.append(new_value_list)
-
+    if max_feature is not None:
+        agscv = get_max_feature(agscv, data, max_feature, str(new_value_list))
     agscv.append(new_value_list)
     agscv.append(np.zeros(ag.len).astype('float32'))
     agscv = np.array(agscv)
-    return normalize(agscv)
+    return agscv
 
 
 class YELPF(object):
@@ -532,15 +533,15 @@ class YELPF(object):
 
 
 class AG(object):
-    def __init__(self, max_feature):
-        self.path = 'temp/ag_scvPARAM' + str(max_feature) + '.pkl'
+    def __init__(self):
+        self.path = 'temp/AG_scv.pkl'
         if os.path.exists(self.path):
             print('use cache AGscv')
             with open(self.path, 'rb') as f:
                 self.scv = pickle.load(f)
         else:
             self.data = utils.get_dataset('AG')
-            self.scv = load_scv(self.data, max_feature)
+            self.scv = load_scv(self.data, method='chi2')
             self.scv = {w: v for w, v in zip(self.data['vocab'], self.scv)}
             with open(self.path, 'wb') as f:
                 pickle.dump(self.scv, f)
