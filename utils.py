@@ -219,7 +219,7 @@ def read_MR():
     data['test_x'], data['test_y'] = x[test_idx:], y[test_idx:]
     data['x'] = x
     data['y'] = y
-    data['lemmatize'] = True
+    data['lemmatize'] = False
     return data
 
 
